@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>REST API Client</title>
+</head>
+<body>
+  <h1>REST API Client Example</h1>
+  <button onclick="getUsers()">Get Users</button>
+  <button onclick="createUser()">Add User</button>
+  <pre id="output"></pre>
+
+  <script>
+    const API_URL = "http://localhost:5000/api/users";
+
+    async function getUsers() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function createUser() {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "New User", email: "new@example.com" })
+      });
+      const data = await res.json();
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
