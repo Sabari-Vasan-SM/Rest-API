@@ -1,11 +1,15 @@
 // Import express
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json()); // to read JSON bodies
+
+// Serve static client files from the `client` folder
+app.use(express.static(path.join(__dirname, "client")));
 
 // Sample data (temporary; usually from a database)
 let users = [
@@ -52,6 +56,11 @@ app.delete("/api/users/:id", (req, res) => {
   res.json({ message: "User deleted" });
 });
 
-// Start server
-const PORT = 5000;
+// Start server (allow overriding port via environment variable)
+const PORT = process.env.PORT || 5000;
+// Ensure GET / returns the client index if requested
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'index.html'));
+});
+
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
