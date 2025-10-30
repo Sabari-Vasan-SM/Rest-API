@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const db = require("./db");
+const auth = require("./auth");
 const app = express();
 
 // Middleware
@@ -11,6 +12,9 @@ app.use(express.json()); // to read JSON bodies
 
 // Serve static client files from the `client` folder
 app.use(express.static(path.join(__dirname, "client")));
+
+// mount auth routes
+app.use('/auth', auth.router);
 
 // NOTE: users are stored in SQLite database (see db.js)
 
@@ -37,7 +41,7 @@ app.get("/api/users/:id", async (req, res) => {
 });
 
 // ✅ CREATE new user
-app.post("/api/users", async (req, res) => {
+app.post("/api/users", auth.requireAuth, async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name || !email) return res.status(400).json({ message: 'Name and email are required' });
@@ -50,7 +54,7 @@ app.post("/api/users", async (req, res) => {
 });
 
 // ✅ UPDATE user (PUT)
-app.put("/api/users/:id", async (req, res) => {
+app.put("/api/users/:id", auth.requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { name, email } = req.body;
@@ -65,7 +69,7 @@ app.put("/api/users/:id", async (req, res) => {
 });
 
 // ✅ DELETE user
-app.delete("/api/users/:id", async (req, res) => {
+app.delete("/api/users/:id", auth.requireAuth, async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const existing = await db.getUserById(id);
