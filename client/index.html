@@ -3,30 +3,85 @@
 <head>
   <meta charset="UTF-8" />
   <title>REST API Client</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; }
+    input { margin: 4px 0; padding: 6px; width: 300px; }
+    button { margin-right: 8px; }
+    pre { background: #f6f8fa; padding: 12px; border-radius: 6px; }
+  </style>
 </head>
 <body>
-  <h1>REST API Client Example</h1>
-  <button onclick="getUsers()">Get Users</button>
-  <button onclick="createUser()">Add User</button>
-  <pre id="output"></pre>
+  <h1>REST API Client (SQLite)</h1>
+
+  <section>
+    <button onclick="getUsers()">GET /api/users</button>
+  </section>
+
+  <section style="margin-top:12px;">
+    <h3>Create user</h3>
+    <input id="create-name" placeholder="Name" /> <br/>
+    <input id="create-email" placeholder="Email" /> <br/>
+    <button onclick="createUser()">POST /api/users</button>
+  </section>
+
+  <section style="margin-top:12px;">
+    <h3>Update user</h3>
+    <input id="update-id" placeholder="User ID" /> <br/>
+    <input id="update-name" placeholder="Name" /> <br/>
+    <input id="update-email" placeholder="Email" /> <br/>
+    <button onclick="updateUser()">PUT /api/users/:id</button>
+  </section>
+
+  <section style="margin-top:12px;">
+    <h3>Delete user</h3>
+    <input id="delete-id" placeholder="User ID" /> <br/>
+    <button onclick="deleteUser()">DELETE /api/users/:id</button>
+  </section>
+
+  <h3>Response</h3>
+  <pre id="output">(responses will appear here)</pre>
 
   <script>
-    const API_URL = "http://localhost:5000/api/users";
+    const API_BASE = location.origin + '/api/users';
 
     async function getUsers() {
-      const res = await fetch(API_URL);
+      const res = await fetch(API_BASE);
       const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }
 
     async function createUser() {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "New User", email: "new@example.com" })
+      const name = document.getElementById('create-name').value || 'New User';
+      const email = document.getElementById('create-email').value || 'new@example.com';
+      const res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
       });
       const data = await res.json();
-      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function updateUser() {
+      const id = document.getElementById('update-id').value;
+      const name = document.getElementById('update-name').value;
+      const email = document.getElementById('update-email').value;
+      if (!id) return alert('Please provide user id to update');
+      const res = await fetch(API_BASE + '/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email })
+      });
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function deleteUser() {
+      const id = document.getElementById('delete-id').value;
+      if (!id) return alert('Please provide user id to delete');
+      const res = await fetch(API_BASE + '/' + id, { method: 'DELETE' });
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     }
   </script>
 </body>
