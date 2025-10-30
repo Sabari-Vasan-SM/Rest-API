@@ -1,0 +1,1 @@
+This project provides a compact Node/Express REST API with full CRUD endpoints for users and an included static client in index.html. Data is stored in a local SQLite database (data.db) making the app easy to run locally for testing and learning. Perfect for quick prototypes, demos, or tutorial projects.
