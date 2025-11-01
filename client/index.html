@@ -2,61 +2,119 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>REST API Client</title>
+  <title>REST API Client (SQLite)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; }
-    input { margin: 4px 0; padding: 6px; width: 300px; }
-    button { margin-right: 8px; }
-    pre { background: #f6f8fa; padding: 12px; border-radius: 6px; }
+    :root{
+      --bg:#f4f6f8; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --danger:#dc2626;
+    }
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1000px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    header h1{margin:0;font-size:20px}
+    .status{color:var(--muted);font-size:14px}
+
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .card{background:var(--card);padding:16px;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,0.06)}
+    .controls{display:flex;flex-direction:column;gap:12px}
+    label{font-size:13px;color:var(--muted)}
+    input[type=text], input[type=password]{padding:10px;border-radius:8px;border:1px solid #e6e9ee;width:100%;box-sizing:border-box}
+    button{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.alt{background:#e6eefc;color:#0b3a80}
+    button.danger{background:var(--danger)}
+    button:disabled{opacity:0.6;cursor:not-allowed}
+
+    .small{font-size:13px;color:var(--muted)}
+    pre#output{white-space:pre-wrap;word-break:break-word;background:#111827;color:#e5e7eb;padding:12px;border-radius:8px;min-height:140px}
+
+    .form-row{display:flex;gap:8px}
+    .form-row input{flex:1}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <h1>REST API Client (SQLite)</h1>
+  <div class="wrap">
+    <header>
+      <h1>REST API Client</h1>
+      <div class="status" id="auth-status">Not logged in</div>
+    </header>
 
-  <section>
-    <button onclick="getUsers()">GET /api/users</button>
-  </section>
+    <div class="grid">
+      <main class="card">
+        <section class="controls">
+          <div>
+            <label class="small">Users</label>
+            <div style="margin-top:8px">
+              <button onclick="getUsers()">Refresh users</button>
+            </div>
+          </div>
 
-  <section style="margin-top:12px;">
-    <h3>Create user</h3>
-    <input id="create-name" placeholder="Name" /> <br/>
-    <input id="create-email" placeholder="Email" /> <br/>
-    <button id="create-btn" onclick="createUser()">POST /api/users (protected)</button>
-  </section>
+          <div>
+            <label class="small">Create user (protected)</label>
+            <div class="form-row" style="margin-top:8px">
+              <input id="create-name" type="text" placeholder="Name" />
+              <input id="create-email" type="text" placeholder="Email" />
+            </div>
+            <div style="margin-top:8px"><button id="create-btn" onclick="createUser()">Create</button></div>
+          </div>
 
-  <section style="margin-top:12px;">
-    <h3>Signup (public)</h3>
-    <input id="signup-name" placeholder="Name" /> <br/>
-    <input id="signup-email" placeholder="Email" /> <br/>
-    <input id="signup-password" placeholder="Password" type="password" /> <br/>
-    <button onclick="signup()">POST /auth/signup</button>
-  </section>
+          <div style="border-top:1px dashed #e6eefc;padding-top:12px">
+            <label class="small">Update user (protected)</label>
+            <div class="form-row" style="margin-top:8px">
+              <input id="update-id" type="text" placeholder="User ID" />
+              <input id="update-name" type="text" placeholder="Name" />
+            </div>
+            <div style="margin-top:8px">
+              <input id="update-email" type="text" placeholder="Email" />
+            </div>
+            <div style="margin-top:8px"><button id="update-btn" onclick="updateUser()">Update</button></div>
+          </div>
 
-  <section style="margin-top:12px;">
-    <h3>Login</h3>
-    <input id="login-email" placeholder="Email" /> <br/>
-    <input id="login-password" placeholder="Password" type="password" /> <br/>
-    <button onclick="login()">POST /auth/login</button>
-    <button id="logout-btn" onclick="logout()">Logout</button>
-    <div id="auth-status"></div>
-  </section>
+          <div style="border-top:1px dashed #e6eefc;padding-top:12px">
+            <label class="small">Delete user (protected)</label>
+            <div class="form-row" style="margin-top:8px">
+              <input id="delete-id" type="text" placeholder="User ID" />
+              <button id="delete-btn" class="danger" onclick="deleteUser()">Delete</button>
+            </div>
+          </div>
+        </section>
 
-  <section style="margin-top:12px;">
-    <h3>Update user</h3>
-    <input id="update-id" placeholder="User ID" /> <br/>
-    <input id="update-name" placeholder="Name" /> <br/>
-    <input id="update-email" placeholder="Email" /> <br/>
-    <button id="update-btn" onclick="updateUser()">PUT /api/users/:id</button>
-  </section>
+        <section style="margin-top:16px">
+          <label class="small">Response</label>
+          <pre id="output">(responses will appear here)</pre>
+        </section>
+      </main>
 
-  <section style="margin-top:12px;">
-    <h3>Delete user</h3>
-    <input id="delete-id" placeholder="User ID" /> <br/>
-    <button id="delete-btn" onclick="deleteUser()">DELETE /api/users/:id</button>
-  </section>
+      <aside class="card">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label class="small">Signup</label>
+            <input id="signup-name" type="text" placeholder="Name" style="margin-top:8px" />
+            <input id="signup-email" type="text" placeholder="Email" style="margin-top:8px" />
+            <input id="signup-password" type="password" placeholder="Password" style="margin-top:8px" />
+            <div style="margin-top:8px"><button class="alt" onclick="signup()">Sign up</button></div>
+          </div>
 
-  <h3>Response</h3>
-  <pre id="output">(responses will appear here)</pre>
+          <div style="border-top:1px solid #f1f5f9;padding-top:12px">
+            <label class="small">Login</label>
+            <input id="login-email" type="text" placeholder="Email" style="margin-top:8px" />
+            <input id="login-password" type="password" placeholder="Password" style="margin-top:8px" />
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button onclick="login()">Login</button>
+              <button id="logout-btn" class="alt" onclick="logout()">Logout</button>
+            </div>
+          </div>
+          <div style="border-top:1px solid #f1f5f9;padding-top:12px">
+            <div class="small">Tips</div>
+            <ul style="padding-left:18px;margin:6px 0;color:var(--muted)">
+              <li>Signup then login to enable protected actions.</li>
+              <li>Use IDs from the users list when updating/deleting.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
 
   <script>
     const API_BASE = location.origin + '/api/users';
@@ -91,8 +149,9 @@
       // Show auth status and toggle login/signup visibility
       const status = document.getElementById('auth-status');
       const logoutBtn = document.getElementById('logout-btn');
+      const userEmail = localStorage.getItem('userEmail');
       if (auth) {
-        status.textContent = 'Logged in';
+        status.textContent = userEmail ? `Logged in as ${userEmail}` : 'Logged in';
         logoutBtn.style.display = 'inline-block';
       } else {
         status.textContent = 'Not logged in';
@@ -183,6 +242,7 @@
       const data = await res.json();
       if (res.ok && data.token) {
         localStorage.setItem('token', data.token);
+        if (data.user && data.user.email) localStorage.setItem('userEmail', data.user.email);
         document.getElementById('auth-status').textContent = 'Logged in as ' + (data.user && data.user.email);
         setAuthState();
         // optionally refresh users after login
@@ -193,6 +253,7 @@
 
     function logout() {
       localStorage.removeItem('token');
+      localStorage.removeItem('userEmail');
       document.getElementById('auth-status').textContent = 'Logged out';
       setAuthState();
     }
