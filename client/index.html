@@ -32,173 +32,9 @@
     @media (max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1>REST API Client</h1>
-      <div class="status" id="auth-status">Not logged in</div>
-    </header>
-
-    <div class="grid">
-      <main class="card">
-        <section class="controls">
-          <div>
-            <label class="small">Users</label>
-            <div style="margin-top:8px">
-              <button onclick="getUsers()">Refresh users</button>
-            </div>
-          </div>
-
-          <div>
-            <label class="small">Create user (protected)</label>
-            <div class="form-row" style="margin-top:8px">
-              <input id="create-name" type="text" placeholder="Name" />
-              <input id="create-email" type="text" placeholder="Email" />
-            </div>
-            <div style="margin-top:8px"><button id="create-btn" onclick="createUser()">Create</button></div>
-          </div>
-
-          <div style="border-top:1px dashed #e6eefc;padding-top:12px">
-            <label class="small">Update user (protected)</label>
-            <div class="form-row" style="margin-top:8px">
-              <input id="update-id" type="text" placeholder="User ID" />
-              <input id="update-name" type="text" placeholder="Name" />
-            </div>
-            <div style="margin-top:8px">
-              <input id="update-email" type="text" placeholder="Email" />
-            </div>
-            <div style="margin-top:8px"><button id="update-btn" onclick="updateUser()">Update</button></div>
-          </div>
-
-          <div style="border-top:1px dashed #e6eefc;padding-top:12px">
-            <label class="small">Delete user (protected)</label>
-            <div class="form-row" style="margin-top:8px">
-              <input id="delete-id" type="text" placeholder="User ID" />
-              <button id="delete-btn" class="danger" onclick="deleteUser()">Delete</button>
-            </div>
-          </div>
-        </section>
-
-        <section style="margin-top:16px">
-          <label class="small">Response</label>
-          <pre id="output">(responses will appear here)</pre>
-        </section>
-      </main>
-
-      <aside class="card">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div>
-            <label class="small">Signup</label>
-            <input id="signup-name" type="text" placeholder="Name" style="margin-top:8px" />
-            <input id="signup-email" type="text" placeholder="Email" style="margin-top:8px" />
-            <input id="signup-password" type="password" placeholder="Password" style="margin-top:8px" />
-            <div style="margin-top:8px"><button class="alt" onclick="signup()">Sign up</button></div>
-          </div>
-
-          <div style="border-top:1px solid #f1f5f9;padding-top:12px">
-            <label class="small">Login</label>
-            <input id="login-email" type="text" placeholder="Email" style="margin-top:8px" />
-            <input id="login-password" type="password" placeholder="Password" style="margin-top:8px" />
-            <div style="margin-top:8px;display:flex;gap:8px">
-              <button onclick="login()">Login</button>
-              <button id="logout-btn" class="alt" onclick="logout()">Logout</button>
-            </div>
-          </div>
-          <div style="border-top:1px solid #f1f5f9;padding-top:12px">
-            <div class="small">Tips</div>
-            <ul style="padding-left:18px;margin:6px 0;color:var(--muted)">
-              <li>Signup then login to enable protected actions.</li>
-              <li>Use IDs from the users list when updating/deleting.</li>
-            </ul>
-          </div>
-        </div>
-      </aside>
-    </div>
-  </div>
-
-  <script>
-    const API_BASE = location.origin + '/api/users';
-
-    async function getUsers() {
-      try {
-        const res = await fetch(API_BASE);
-        const data = await res.json();
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        document.getElementById('output').textContent = 'Network error: ' + err.message;
-      }
-    }
-
-    function getAuthHeader() {
-      const token = localStorage.getItem('token');
-      return token ? { 'Authorization': 'Bearer ' + token } : {};
-    }
-
-    function isAuthenticated() {
-      return !!localStorage.getItem('token');
-    }
-
-    function setAuthState() {
-      const auth = isAuthenticated();
-      // Toggle protected controls
-      ['create-name','create-email','create-btn','update-id','update-name','update-email','update-btn','delete-id','delete-btn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.disabled = !auth;
-      });
-
-      // Show auth status and toggle login/signup visibility
-      const status = document.getElementById('auth-status');
-      const logoutBtn = document.getElementById('logout-btn');
-      const userEmail = localStorage.getItem('userEmail');
-      if (auth) {
-        status.textContent = userEmail ? `Logged in as ${userEmail}` : 'Logged in';
-        logoutBtn.style.display = 'inline-block';
-      } else {
-        status.textContent = 'Not logged in';
-        logoutBtn.style.display = 'none';
-      }
-    }
-
-    async function createUser() {
-      const name = document.getElementById('create-name').value || 'New User';
-      const email = document.getElementById('create-email').value || 'new@example.com';
-      const headers = Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader());
-      try {
-        if (!isAuthenticated()) return alert('Please login first to perform this operation.');
-        const res = await fetch(API_BASE, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ name, email })
-        });
-        if (res.status === 401) {
-          alert('Unauthorized - please login again');
-          logout();
-          return;
-        }
-        const data = await res.json();
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
-        document.getElementById('output').textContent = 'Network error: ' + err.message;
-      }
-    }
-
-    async function updateUser() {
-      const id = document.getElementById('update-id').value;
-      const name = document.getElementById('update-name').value;
-      const email = document.getElementById('update-email').value;
-      if (!id) return alert('Please provide user id to update');
-      try {
-        if (!isAuthenticated()) return alert('Please login first to perform this operation.');
-        const headers = Object.assign({ 'Content-Type': 'application/json' }, getAuthHeader());
-        const res = await fetch(API_BASE + '/' + id, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify({ name, email })
-        });
-        if (res.status === 401) { alert('Unauthorized - please login again'); logout(); return; }
-        const data = await res.json();
-        document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-      } catch (err) {
+  <script src="app.js"></script>
+</body>
+</html>
         document.getElementById('output').textContent = 'Network error: ' + err.message;
       }
     }
@@ -246,6 +82,25 @@
         document.getElementById('auth-status').textContent = 'Logged in as ' + (data.user && data.user.email);
         setAuthState();
         // optionally refresh users after login
+        getUsers();
+      }
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userEmail');
+      document.getElementById('auth-status').textContent = 'Logged out';
+      setAuthState();
+    }
+
+    // initialize UI state on load
+    setAuthState();
+  </script>
+</body>
+</html>
+n');
+ users after login
         getUsers();
       }
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
